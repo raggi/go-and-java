@@ -5,6 +5,7 @@ import (
 	"fmt"
 	_ "github.com/bmizerany/pq"
 	"net/http"
+	_ "net/http/pprof"
 )
 
 const (
@@ -12,9 +13,15 @@ const (
 )
 
 var (
-	config = ReadConfig()
-	db     = openDB()
+	config Config
+	db     *sql.DB
 )
+
+func init() {
+	config = ReadConfig()
+	db = openDB()
+	userInit(db)
+}
 
 func main() {
 	http.HandleFunc("/authenticate", Authenticate) // auth_resource.go

@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	//"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -32,11 +33,13 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "No user could be found", NotFound)
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
 	bytes, err := json.Marshal(user)
 	if err != nil {
 		http.Error(w, err.Error(), Unauthorized)
 		return
 	}
+	//w.Header().Set("Content-Length", fmt.Sprintf("%d", len(bytes)))
 	w.Write(bytes)
 }
 

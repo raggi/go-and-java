@@ -20,6 +20,7 @@ var (
 func init() {
 	config = ReadConfig()
 	db = openDB()
+	db.SetMaxIdleConns(254)
 	userInit(db)
 }
 

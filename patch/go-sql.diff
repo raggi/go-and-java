@@ -1,0 +1,100 @@
+diff -r d1beb5cd107e src/pkg/database/sql/sql.go
+--- a/src/pkg/database/sql/sql.go	Sun Sep 30 10:35:09 2012 +0200
++++ b/src/pkg/database/sql/sql.go	Sun Sep 30 14:19:31 2012 -0700
+@@ -189,9 +189,10 @@
+ 	driver driver.Driver
+ 	dsn    string
+ 
+-	mu       sync.Mutex // protects freeConn and closed
+-	freeConn []driver.Conn
+-	closed   bool
++	mu           sync.Mutex // protects freeConn and closed
++	freeConn     []driver.Conn
++	closed       bool
++	maxIdleConns int
+ }
+ 
+ // Open opens a database specified by its database driver name and a
+@@ -205,7 +206,7 @@
+ 	if !ok {
+ 		return nil, fmt.Errorf("sql: unknown driver %q (forgotten import?)", driverName)
+ 	}
+-	return &DB{driver: driver, dsn: dataSourceName}, nil
++	return &DB{driver: driver, dsn: dataSourceName, maxIdleConns: 2}, nil
+ }
+ 
+ // Close closes the database, releasing any open resources.
+@@ -224,11 +225,24 @@
+ 	return err
+ }
+ 
+-func (db *DB) maxIdleConns() int {
+-	const defaultMaxIdleConns = 2
++// Adjust the maximum number of permanently retained database connections. This
++// defaults to 2 for historical reasons. N.B. This is not the maximum number of
++// connections that can be open, or the minimum. It is the maximum number that
++// are retained between uses.
++func (db *DB) SetMaxIdleConns(v int) int {
++	db.mu.Lock()
++	defer db.mu.Unlock()
++	db.maxIdleConns = v
++	return v
++}
++
++// The current maximum number of idle database connections allowed. See
++// SetMaxIdleConns for more information.
++func (db *DB) MaxIdleConns() int {
+ 	// TODO(bradfitz): ask driver, if supported, for its default preference
+-	// TODO(bradfitz): let users override?
+-	return defaultMaxIdleConns
++	db.mu.Lock()
++	defer db.mu.Unlock()
++	return db.maxIdleConns
+ }
+ 
+ // conn returns a newly-opened or cached driver.Conn
+@@ -272,11 +286,16 @@
+ 		// Don't reuse bad connections.
+ 		return
+ 	}
++	// maxIdle is fetched before we open the lock. Ideally move to an RWLock
++	// instead, and retain it, which may reduce the time over which inconsistent
++	// numbers of connections may be retained. The value also could just be
++	// modified using atomic.
++	maxIdle := db.MaxIdleConns()
+ 	db.mu.Lock()
+ 	if putConnHook != nil {
+ 		putConnHook(db, c)
+ 	}
+-	if n := len(db.freeConn); !db.closed && n < db.maxIdleConns() {
++	if n := len(db.freeConn); !db.closed && n < maxIdle {
+ 		db.freeConn = append(db.freeConn, c)
+ 		db.mu.Unlock()
+ 		return
+diff -r d1beb5cd107e src/pkg/database/sql/sql_test.go
+--- a/src/pkg/database/sql/sql_test.go	Sun Sep 30 10:35:09 2012 +0200
++++ b/src/pkg/database/sql/sql_test.go	Sun Sep 30 14:19:31 2012 -0700
+@@ -608,6 +608,22 @@
+ 	}
+ }
+ 
++func TestMaxIdleConns(t *testing.T) {
++	db := newTestDB(t, "")
++	defer closeDB(t, db)
++
++	// MaxIdleConns defaults to 2 for historical reasons
++	if db.MaxIdleConns() != 2 {
++		t.Errorf("MaxIdleConns=%d, want %d", db.MaxIdleConns(), 2)
++	}
++
++	db.SetMaxIdleConns(5)
++
++	if db.MaxIdleConns() != 5 {
++		t.Errorf("MaxIdleConns=%d, want %d", db.MaxIdleConns(), 5)
++	}
++}
++
+ func stack() string {
+ 	buf := make([]byte, 1024)
+ 	return string(buf[:runtime.Stack(buf, false)])
+

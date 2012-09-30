@@ -1,7 +1,7 @@
 database:
     driverClass: org.postgresql.Driver
-    user: postgres
-    password: postgres
+    user: raggi
+    password: ""
     url: jdbc:postgresql://localhost/authdb
     properties:
         charSet: UTF-8

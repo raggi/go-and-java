@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"log"
@@ -29,5 +30,6 @@ func ReadConfig() Config {
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println(c)
 	return c
 }

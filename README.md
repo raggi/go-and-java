@@ -70,10 +70,11 @@ There are other makefile targets, read the Makefile.
  * TODO - window scaling
  * TODO - msl tuning if we get to real high concurrency & lossy
 
-### Example Results
+## Example Results
 
-Go (patched database/sql) - 12MB of ram - 2 hosts:
+### Go (patched database/sql) - 12MB of ram - 2 hosts:
 
+```
 @min ~ % wrk -c 200 -r 100000 -t 4 -H 'Authorization: basic apikey_value' http://mbp.local:8080/authenticate
 Making 100000 requests to http://mbp.local:8080/authenticate
   4 threads and 200 connections
@@ -92,9 +93,11 @@ Making 100000 requests to http://mbp.local:8080/authenticate
   100000 requests in 6.21s, 24.99MB read
 Requests/sec:  16102.53
 Transfer/sec:      4.02MB
+```
 
-Java (after a prior run of 1M requests) - 228MB of ram:
+### Java (after a prior run of 1M requests) - 228MB of ram:
 
+```
 @min ~ % wrk -c 200 -r 100000 -t 4 -H 'Authorization: basic apikey_value' http://mbp.local:8080/authenticate
 Making 100000 requests to http://mbp.local:8080/authenticate
   4 threads and 200 connections
@@ -105,4 +108,4 @@ Making 100000 requests to http://mbp.local:8080/authenticate
   Socket errors: connect 0, read 0, write 0, timeout 4
 Requests/sec:   9916.83
 Transfer/sec:      2.48MB
-
+```

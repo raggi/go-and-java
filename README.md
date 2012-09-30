@@ -95,7 +95,7 @@ Requests/sec:  16102.53
 Transfer/sec:      4.02MB
 ```
 
-### Java (after a prior run of 1M requests) - 228MB of ram:
+### Java (after a prior run of 1M requests) - 228MB of ram - 2 hosts:
 
 ```
 @min ~ % wrk -c 200 -r 100000 -t 4 -H 'Authorization: basic apikey_value' http://mbp.local:8080/authenticate

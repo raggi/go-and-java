@@ -7,7 +7,7 @@ data: sql/data.sql
 	psql authdb < sql/data.sql
 
 bin/main: src/**/*
-	GOPATH="${PWD}" go install main
+	GOPATH="${PWD}" go install ${GOFLAGS} main
 
 go: bin/main
 	GOMAXPROCS=24 ./bin/main cfg/config.json

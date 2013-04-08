@@ -21,10 +21,10 @@ func init() {
 	config = ReadConfig()
 	db = openDB()
 	db.SetMaxIdleConns(254)
+	userInit(db)
 }
 
 func main() {
-	userInit(db) // XXX tip currently halts for an extended time if this is init
 	fmt.Printf("Listening on :%d\n", port)
 	http.HandleFunc("/authenticate", Authenticate) // auth_resource.go
 	http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
